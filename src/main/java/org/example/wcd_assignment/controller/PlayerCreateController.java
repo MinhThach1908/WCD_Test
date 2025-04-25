@@ -28,6 +28,7 @@ public class PlayerCreateController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        int playerId = Integer.parseInt(request.getParameter("id"));
         String name = request.getParameter("name");
         String fullName = request.getParameter("full_name");
         String age = request.getParameter("age");

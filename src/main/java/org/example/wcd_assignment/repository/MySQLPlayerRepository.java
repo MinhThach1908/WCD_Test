@@ -190,7 +190,7 @@ public class MySQLPlayerRepository implements PlayerRepository {
     }
 
     private Player mapPlayer(ResultSet rs) throws SQLException {
-        Player player = new Player;
+        Player player = new Player(playerId, name, fullName, age, indexId);
         player.setPlayerId(rs.getInt("player_id"));
         player.setName(rs.getString("name"));
         player.setFullName(rs.getString("full_name"));

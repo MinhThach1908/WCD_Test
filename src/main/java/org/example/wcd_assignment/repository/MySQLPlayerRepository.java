@@ -10,50 +10,52 @@ import java.util.List;
 
 public class MySQLPlayerRepository implements PlayerRepository {
 
-    private static final String TABLE_NAME = "player";  // Bảng player trong database
+    private static final String TABLE_NAME = "players";
 
-    public Player findById(long id) {
+    @Override
+    public Player findById(long playerId) {
         String query = "SELECT * FROM " + TABLE_NAME + " WHERE player_id = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setLong(1, id);
+
+            stmt.setLong(1, playerId); // Changed to long
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 return mapPlayer(rs);
             }
         } catch (SQLException e) {
-            System.out.println("Lỗi khi tìm player theo id: " + e.getMessage());
+            System.out.println("Error finding player by ID: " + e.getMessage());
         }
         return null;
     }
 
+    @Override
     public List<Player> findAll(int limit, int page) {
         String query = "SELECT * FROM " + TABLE_NAME + " LIMIT ? OFFSET ?";
-
         List<Player> players = new ArrayList<>();
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
+
             stmt.setInt(1, limit);
             stmt.setInt(2, (page - 1) * limit);
-
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 players.add(mapPlayer(rs));
             }
         } catch (SQLException e) {
-            System.out.println("Lỗi khi lấy danh sách player: " + e.getMessage());
+            System.out.println("Error retrieving players: " + e.getMessage());
         }
 
         return players.isEmpty() ? Collections.emptyList() : players;
     }
 
+    @Override
     public List<Player> findAll(int limit, int page, String keyword, String sortColumn, String sortDirection) {
         String[] searchableColumns = {"name", "full_name", "age"};
-
         StringBuilder query = new StringBuilder("SELECT * FROM " + TABLE_NAME + " WHERE 1=1");
 
         if (keyword != null && !keyword.isEmpty()) {
@@ -68,17 +70,16 @@ public class MySQLPlayerRepository implements PlayerRepository {
         if (sortColumn != null && !sortColumn.isEmpty() && sortDirection != null && !sortDirection.isEmpty()) {
             query.append(" ORDER BY ").append(sortColumn).append(" ").append(sortDirection);
         } else {
-            query.append(" ORDER BY player_id ASC");  // Nếu không có tham số sắp xếp, mặc định sắp xếp theo player_id
+            query.append(" ORDER BY player_id ASC");
         }
 
         query.append(" LIMIT ? OFFSET ?");
-
         List<Player> players = new ArrayList<>();
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query.toString())) {
-            int paramIndex = 1;
 
+            int paramIndex = 1;
             if (keyword != null && !keyword.isEmpty()) {
                 for (String column : searchableColumns) {
                     stmt.setString(paramIndex++, "%" + keyword + "%");
@@ -89,17 +90,17 @@ public class MySQLPlayerRepository implements PlayerRepository {
             stmt.setInt(paramIndex, (page - 1) * limit);
 
             ResultSet rs = stmt.executeQuery();
-
             while (rs.next()) {
                 players.add(mapPlayer(rs));
             }
         } catch (SQLException e) {
-            System.out.println("Lỗi khi lấy danh sách player: " + e.getMessage());
+            System.out.println("Error retrieving players with search: " + e.getMessage());
         }
 
         return players.isEmpty() ? Collections.emptyList() : players;
     }
 
+    @Override
     public Player save(Player player) {
         String query = "INSERT INTO " + TABLE_NAME + " (name, full_name, age, index_id) VALUES (?, ?, ?, ?)";
 
@@ -116,55 +117,61 @@ public class MySQLPlayerRepository implements PlayerRepository {
             if (affectedRows > 0) {
                 try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
-                        player.setPlayerId(generatedKeys.getInt(1));
+                        player.setPlayerId((int) generatedKeys.getLong(1)); // Adjusted to long
                         return player;
                     }
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Lỗi khi lưu player: " + e.getMessage());
+            System.out.println("Error saving player: " + e.getMessage());
         }
 
         return null;
     }
 
-    public Player update(long id, Player player) {
+    @Override
+    public Player update(long playerId, Player player) {
         String query = "UPDATE " + TABLE_NAME + " SET name = ?, full_name = ?, age = ?, index_id = ? WHERE player_id = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
+
             stmt.setString(1, player.getName());
             stmt.setString(2, player.getFullName());
             stmt.setString(3, player.getAge());
             stmt.setInt(4, player.getIndexId());
-            stmt.setLong(5, id);
+            stmt.setLong(5, playerId); // Adjusted to long
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
-                player.setPlayerId((int) id);  // Giữ lại ID cũ
+                player.setPlayerId((int) playerId);
                 return player;
             }
         } catch (SQLException e) {
-            System.out.println("Lỗi khi cập nhật player: " + e.getMessage());
+            System.out.println("Error updating player: " + e.getMessage());
         }
+
         return null;
     }
 
-    // Xóa player theo ID
-    public boolean deleteById(long id) {
+    @Override
+    public boolean deleteById(long playerId) {
         String query = "DELETE FROM " + TABLE_NAME + " WHERE player_id = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setLong(1, id);
+
+            stmt.setLong(1, playerId); // Adjusted to long
             int affectedRows = stmt.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            System.out.println("Lỗi khi xóa player: " + e.getMessage());
+            System.out.println("Error deleting player: " + e.getMessage());
         }
+
         return false;
     }
 
+    @Override
     public int getTotalRecords(String keyword) {
         String query = "SELECT COUNT(*) FROM " + TABLE_NAME;
         if (keyword != null && !keyword.isEmpty()) {
@@ -183,19 +190,21 @@ public class MySQLPlayerRepository implements PlayerRepository {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Error getting total records: " + e.getMessage());
         }
 
         return 0;
     }
 
-//    private Player mapPlayer(ResultSet rs) throws SQLException {
-//        Player player = new Player(playerId, name, fullName, age, indexId);
-//        player.setPlayerId(rs.getInt("player_id"));
-//        player.setName(rs.getString("name"));
-//        player.setFullName(rs.getString("full_name"));
-//        player.setAge(rs.getString("age"));
-//        player.setIndexId(rs.getInt("index_id"));
-//        return player;
-//    }
+    // Helper method to convert ResultSet into Player
+    private Player mapPlayer(ResultSet rs) throws SQLException {
+        Player player = new Player(
+                (int) rs.getLong("player_id"), // Adjusted to long
+                rs.getString("name"),
+                rs.getString("full_name"),
+                rs.getString("age"),
+                rs.getInt("index_id")
+        );
+        return player;
+    }
 }

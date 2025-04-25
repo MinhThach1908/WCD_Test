@@ -189,13 +189,13 @@ public class MySQLPlayerRepository implements PlayerRepository {
         return 0;
     }
 
-    private Player mapPlayer(ResultSet rs) throws SQLException {
-        Player player = new Player(playerId, name, fullName, age, indexId);
-        player.setPlayerId(rs.getInt("player_id"));
-        player.setName(rs.getString("name"));
-        player.setFullName(rs.getString("full_name"));
-        player.setAge(rs.getString("age"));
-        player.setIndexId(rs.getInt("index_id"));
-        return player;
-    }
+//    private Player mapPlayer(ResultSet rs) throws SQLException {
+//        Player player = new Player(playerId, name, fullName, age, indexId);
+//        player.setPlayerId(rs.getInt("player_id"));
+//        player.setName(rs.getString("name"));
+//        player.setFullName(rs.getString("full_name"));
+//        player.setAge(rs.getString("age"));
+//        player.setIndexId(rs.getInt("index_id"));
+//        return player;
+//    }
 }
